@@ -112,6 +112,23 @@ This project presents a hands-on study of the **Qwen 2.5-0.5B** large language m
 pip install transformers accelerate psutil
 ```
 
+## Requirements
+
+All dependencies are listed in `ai-engineering-learning/qwen3.5_model_overview/requirement.txt`. Install them with:
+
+​```bash
+pip install -r requirements.txt
+​```
+
+## Code
+
+The main implementation is in `ai-engineering-learning/qwen3.5_model_overview/Qwen2.5_0_5B.ipynb`
+
+This file contains:
+- Model loading using `AutoTokenizer` and `AutoModelForCausalLM`
+- Benchmarking pipeline (inference time, RAM usage, token speed)
+- Optimization experiments (caching, batching, torch.compile, etc.)
+
 ##  How an LLM Works (Summary)
 
 1. **Tokenization & Embedding** — Text is converted to tokens, then to numerical vectors.
