@@ -1349,14 +1349,330 @@ The GPT-4 tokenizer is more efficient because it produces fewer tokens for the s
 3. Run the code cells to compare token counts.
 
 ---
+**3. Word2Vec Analogies: Train Word2Vec on a larger corpus (try Wikipedia or Common Crawl) and find interesting analogies beyond "king - man + woman = queen". What other semantic relationships can you discover?**
 
-3. **Word2Vec Analogies**: Train Word2Vec on a larger corpus (try Wikipedia or Common Crawl) and find interesting analogies beyond "king - man + woman = queen". What other semantic relationships can you discover?
+---
 
-4. **Self-Attention from Scratch**: Implement the full self-attention formula in NumPy, then verify your results match PyTorch's `nn.MultiheadAttention` for the same inputs.
 
-5. **Causal Masking**: Modify the attention implementation to use a causal mask. How do attention patterns change? Can you visualize where each token attends?
+See implementation in `C:\Users\SOUMILI\Documents\Code\ai-engineering-learning\tokenization_vectorization_Attention\word2vec_analogies.ipynb`
 
-6. **Embedding Visualization**: Use t-SNE or UMAP to visualize embeddings from a pre-trained model. Do semantically related words cluster together? What surprising clusters do you find?
+**What is this project**
+
+This project shows how to train a Word2Vec model using a large text dataset and test how well it understands relationships between words (like king → queen).
+
+**What is Word2Vec?**
+
+Word2Vec is a technique that converts words into vectors (numbers) so that:
+
+* Similar words are close together
+
+* Relationships between words can be captured mathematically
+
+Example:
+
+king - man + woman ≈ queen
+
+**Steps in the Code**
+
+1. Install required library
+
+2. Import libraries
+
+3. . Load dataset
+
+dataset = api.load("text8")
+
+text8 = cleaned Wikipedia text
+
+Already tokenized (words are separated)
+
+4. Train Word2Vec model
+
+* vector_size=100 → each word becomes a vector of size 100
+
+* window=5 → looks at 5 words before and after
+
+* min_count=5 → ignores rare words
+
+* workers=4 → uses 4 CPU cores (faster training)
+
+**Testing the Model**
+
+Example 1: Gender relationship
+
+`model.wv.most_similar(positive=["king", "woman"], negative=["man"])`
+
+Expected: queen
+
+**What does this show**
+
+The model learns:
+
+Gender relationships → king → queen
+
+**Key Takeaways**
+
+* Word2Vec learns meaning from context
+
+* Words become vectors
+
+* You can do math on words
+
+* Useful for NLP tasks like:
+
+* Similarity search
+
+* Recommendation systems
+
+* Text classification
+
+* Words that appear in similar contexts have similar meanings.
+
+---
+**4. Self-Attention from Scratch: Implement the full self-attention formula in NumPy, then verify your results match PyTorch's `nn.MultiheadAttention` for the same inputs.**
+
+---
+
+See implementation in `C:\Users\SOUMILI\Documents\Code\ai-engineering-learning\tokenization_vectorization_Attention\self_attention_from_scratch.ipynb`
+
+**Self-Attention: NumPy vs PyTorch (Simple Explanation)**
+
+**What this code does**
+
+This project shows how self-attention works in two ways:
+
+* Using NumPy (from scratch)
+
+* Using PyTorch built-in MultiheadAttention
+
+Then it compares both outputs to check if they match.
+
+**Idea in simple words**
+
+Self-attention helps a model understand:
+
+“Which words (or tokens) are important compared to others?”
+
+It does this using 3 things:
+
+* Q (Query) → What I am looking for
+
+* K (Key) → What I contain
+
+* V (Value) → What I give
+
+**Steps in NumPy Self-Attention**
+
+1. Convert input X into:
+
+    * Q = X × Wq
+
+    * K = X × Wk
+
+    * V = X × Wv
+
+2. Compute similarity:
+
+      scores = Q × Kᵀ
+
+3. Scale it:
+
+      scores / √dk
+
+4. Apply softmax → gives attention weights
+
+5. Final output:
+
+     output = weights × V
+
+**PyTorch Version**
+
+* Uses nn.MultiheadAttention
+
+* We manually set:
+
+     Query, Key, Value weights
+
+* Disable extra projection to match NumPy
+
+* Run attention on same input
+
+**Why transpose weights in PyTorch**
+
+PyTorch stores weights differently, so we use:
+
+          W.T
+
+to match NumPy calculations.
+
+**Final Comparison**
+
+We compute:
+
+       mean difference between NumPy and PyTorch output
+
+If everything is correct:
+
+      The difference should be very small (close to 0)
+
+**Key Takeaways**
+
+* Self-attention = compare tokens + combine information
+
+* NumPy helps understand the math
+
+* PyTorch makes it fast and scalable
+
+* Both should give same result if implemented correctly
+
+* Helps understand how Transformers work internally
+
+* Builds strong intuition for LLMs
+
+
+
+---
+**5. Causal Masking: Modify the attention implementation to use a causal mask. How do attention patterns change? Can you visualize where each token attends?**
+
+---
+
+See implementation in `C:\Users\SOUMILI\Documents\Code\ai-engineering-learning\tokenization_vectorization_Attention\casual_masking.ipynb`
+
+**Self-Attention (With & Without Mask)**
+
+This project shows how self-attention works in a very simple way using PyTorch.
+
+We compute attention:
+
+* Without mask (can see all words)
+
+* With causal mask (can only see past words)
+
+**What is Self-Attention**
+
+Self-attention helps a model understand:
+
+“When I read this word, which other words should I focus on”
+
+Example:
+
+"I love learning AI"
+
+When reading "learning", the model may focus on:
+
+* "love"
+
+* "AI"
+
+**Steps in the Code**
+
+1. Create Input
+
+We start with tokens:
+
+      tokens = ["I","love","learning","AI"]
+
+Convert them into vectors (embeddings):
+
+      X = torch.randn(seq_len, d_model)
+
+2. Create Q, K, V
+
+We compute:
+
+* Query (Q) → what I am looking for
+
+* Key (K) → what I contain
+
+* Value (V) → actual information
+
+`Q = X @ Wq,
+K = X @ Wk,
+V = X @ Wv`
+
+3. Compute Attention Scores
+
+         scores = Q @ K.T / sqrt(d_model)
+
+This tells how much each word relates to others.
+
+4. Apply Softmax
+
+         attention = softmax(scores)
+
+Now values become probabilities (0 to 1).
+
+**Attention WITHOUT Mask**
+
+* Each word can see all words
+
+* Used in models like encoders
+
+* Output: Heatmap shows full connections
+
+* Example:
+
+"AI" can look at "I", "love", "learning"
+
+**Attention WITH Causal Mask**
+
+We block future words using a mask:
+
+        mask = torch.triu(torch.ones(seq_len, seq_len), diagonal=1)
+
+Then apply:
+
+        masked_scores = scores + mask
+
+**Why Mask**
+
+Because in tasks like text generation:
+
+A word should NOT see future words
+
+Example:
+
+"learning" should NOT see "AI"
+
+**After Masking**
+
+Each word sees only:
+
+* itself
+
+* previous words
+
+* Heatmap becomes triangular
+
+**Visualization**
+
+We use:
+
+* matplotlib
+
+* seaborn
+
+To plot attention heatmaps:
+
+* Blue → no mask
+
+* Red → causal mask
+
+**Key Takeaways**
+
+* Self-attention finds relationships between words
+
+* Q, K, V are core components
+
+* Softmax converts scores → probabilities
+
+* Masking prevents cheating (seeing future)
+
+* This is the core idea behind Transformers used in:
+
+ChatGPT, BERT, GPT models
+
+
 
 ---
 
@@ -1365,108 +1681,20 @@ The GPT-4 tokenizer is more efficient because it produces fewer tokens for the s
 | Resource | Topic |
 |----------|-------|
 
-| ["Attention Is All You Need" — Vaswani et al. (2017)](https://arxiv.org/abs/1706.03762) | Original Transformer paper | 
 
 | ["Effective Approaches to Attention-based NMT" — Luong et al. (2015)](https://arxiv.org/abs/1508.04025) | Attention foundations | 
 
-| ["Neural Machine Translation of Rare Words with Subword Units" — Sennrich et al. (2015)](https://arxiv.org/abs/1508.07909) | BPE for NLP |
-
 | ["RoFormer: Enhanced Transformer with RoPE" — Su et al. (2021)](https://arxiv.org/abs/2104.09864) | Rotary embeddings | 
-
-| ["The Illustrated Transformer" — Jay Alammar](https://jalammar.github.io/illustrated-transformer/) | Visual walkthrough | 
-
-| ["Minbpe" — Andrej Karpathy](https://github.com/karpathy/minbpe) | Clean BPE implementation | 
 
 | [HuggingFace Tokenizers Documentation](https://huggingface.co/docs/tokenizers) | Practical tokenizer usage | 
 
-| ["Let's build the GPT Tokenizer" — Karpathy (YouTube)](https://www.youtube.com/watch?v=zduSFxRajkE) | Video walkthrough of BPE | 
+| ["The Illustrated Transformer" — Jay Alammar](https://jalammar.github.io/illustrated-transformer/) | Visual walkthrough | 
+
 
 ---
 
-### 1. "Attention Is All You Need" — Vaswani et al. (2017)
----
 
-**Paper:** [arxiv.org/abs/1706.03762](https://arxiv.org/abs/1706.03762)
-
-**Authors:** Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan N. Gomez, Łukasz Kaiser, Illia Polosukhin (all at Google; equal contributors)
-
-#### The Problem They Were Solving
-
-Before 2017, the dominant approach to sequence tasks like machine translation used **Recurrent Neural Networks (RNNs)** and **LSTMs**. These had a fundamental architectural constraint: they processed tokens **one at a time, sequentially**. This caused several problems:
-
-- **Slow training** — you couldn't parallelize across a sequence; token 5 had to wait for tokens 1–4 to finish
-- **Vanishing gradients over long sequences** — information from early tokens degraded before reaching later layers
-- **Long-range dependency failures** — the word "it" at position 50 might refer to a noun at position 3, but that connection was hard to maintain over 47 sequential steps
-
-
-
-#### The Core Idea
-
-The paper introduces the **Transformer** architecture, built entirely on **self-attention mechanisms**. Every token can directly "attend to" (compare itself against) every other token **simultaneously** — not sequentially.
-
-**Scaled Dot-Product Attention:**
-```
-Attention(Q, K, V) = softmax(QKᵀ / √dₖ) · V
-```
-- **Q (Queries):** What each token is looking for
-- **K (Keys):** What each token has to offer
-- **V (Values):** The actual information to aggregate
-- **√dₖ scaling:** Prevents dot products from growing too large in high dimensions, which would push softmax into a flat gradient region
-
-**Multi-Head Attention:** Instead of one attention operation, the model runs `h` parallel attention heads, each using different learned projection matrices. Each head can focus on a different type of relationship — one head might track syntactic dependencies, another semantic similarity. Their outputs are concatenated and projected back.
-
-**Positional Encoding:** Since attention has no inherent notion of word order (unlike RNNs), the paper adds positional encodings to token embeddings using sine and cosine functions at varying frequencies. This lets the model distinguish "The dog bit the man" from "The man bit the dog."
-
-**Architecture:** An encoder-decoder structure with 6 layers each. Every layer contains: (1) multi-head self-attention and (2) a position-wise feed-forward network. Residual connections and layer normalization wrap each sublayer for training stability. The decoder adds a third sublayer: cross-attention over the encoder output (so the decoder can "look at" the input sentence while generating the output).
-
-The transformer architecture:
-```
-Input Tokens
-     │
-     ▼
-[Embedding + Positional Encoding]
-     │         ↑
-     │    "Where is each token in the sequence?"
-     ▼
-┌──────────────────────────┐
-│  Multi-Head Self-Attention│  ← Run attention H times in parallel,
-│                          │    each learning different relationships
-├──────────────────────────┤
-│  Add & LayerNorm         │  ← Residual connection (helps gradients flow)
-├──────────────────────────┤
-│  Feed-Forward Network    │  ← Per-token transformation
-│  (2 linear layers + ReLU)│
-├──────────────────────────┤
-│  Add & LayerNorm         │
-└──────────────────────────┘
-     │  (× N layers stacked)
-     ▼
-  Output Logits → Softmax → Token Probabilities
-
-```
-
-#### Key Results
-
-Base Transformer (65M params) achieved state-of-the-art on English→German translation, beating all prior RNN/CNN models with less training time.
-
-#### Why It Matters
-
--- Full parallelization → train efficiently on GPUs.
-
--- Every token can directly attend to every other token → no fading long-range dependencies.
-
--- Became the foundation for GPT, BERT, Claude, and virtually every modern LLM.
-
-#### What to Take Away
-
-- **Attention replaces recurrence.** Each token attends to all others simultaneously — no sequential bottleneck, no vanishing gradient across long distances.
-- **Multi-head attention** lets the model simultaneously capture different types of linguistic relationships.
-- **Positional encoding** injects word-order information into an otherwise order-agnostic architecture.
-- **Parallelism is the killer feature.** Training that took weeks on RNNs now takes hours on GPUs.
-- **Causal masking** in the decoder (masking future tokens in the attention matrix) is what makes GPT-style autoregressive generation possible — the model cannot "peek" at tokens it hasn't generated yet.
-- Architectural details like 6 layers and 8 heads were tuned it.
----
-**2.["Effective Approaches to Attention-based NMT" — Luong et al. (2015)](https://arxiv.org/abs/1508.04025)**
+**1.["Effective Approaches to Attention-based NMT" — Luong et al. (2015)](https://arxiv.org/abs/1508.04025)**
 
 ---
 
@@ -1532,4 +1760,317 @@ Decoder generates target: J'  aime  les  chats
 * Without attention: Summarize the whole story in 1 sentence → lose details.
 
 * With attention: Look at relevant parts for each translated word → accurate translation.
+
+---
+
+**2.["RoFormer: Enhanced Transformer with RoPE" — Su et al. (2021)](https://arxiv.org/abs/2104.09864) | Rotary embeddings |**
+
+---
+
+**1. What is this paper about**
+
+* Transformers don’t understand word order by default.
+
+* Older methods add position info, but they don’t handle long sequences well.
+
+* This paper introduces RoPE (Rotary Position Embedding) to fix this.
+
+* It encodes position by rotating vectors inside attention instead of adding them.
+
+**2. Key Idea (Very Simple)**
+
+* Split vector into pairs → treat each pair like a 2D point
+
+* Rotate each pair using sin & cos based on position
+
+* Use rotated vectors in attention
+
+* Result: attention now understands relative distance between words
+
+**3. How it Works**
+
+* Take Query (Q) and Key (K)
+
+* Apply rotation based on position
+
+* Compute attention normally
+
+`Q, K → Rotate → Attention → Output`
+
+**4. Advantages**
+
+* Captures relative + absolute position together
+
+* Works for long sequences (no fixed limit)
+
+* Far tokens have less influence (natural decay)
+
+* Works with efficient transformers
+
+* Slightly better performance on long text tasks
+
+**5. Disadvantages**
+
+* Slightly more complex math
+
+* Adds small computation overhead
+
+* Improvement is sometimes not huge
+
+**6. Intuition**
+
+Think like this:
+
+* Each token = arrow
+
+* RoPE = rotate arrow based on position
+
+* Attention = compares rotated arrows
+
+* So model understands:
+
+“how far words are”
+
+“which words are closer or important”
+
+**7. Why it is Important**
+
+* Solves limitation of old positional encodings
+
+* Works well for long-context models (like LLMs)
+
+* Now widely used in modern models
+
+`RoPE = Rotate vectors → Encode position inside attention → Better understanding of word order`
+
+---
+**3. | [HuggingFace Tokenizers Documentation](https://huggingface.co/docs/tokenizers) | Practical tokenizer usage |**
+
+---
+
+**HuggingFace Tokenizers (Simple README)**
+
+**What is this**
+
+HuggingFace Tokenizers is a **library** that converts text into numbers (tokens) so AI models can understand it.
+
+Example:
+
+```
+"I love AI" → ["I", "love", "AI"] → [101, 234, 567]
+```
+
+
+
+**Why do we need it**
+
+* Models **cannot understand text** directly
+* They only understand **numbers**
+* Tokenizer acts like a **translator (text → numbers)**
+
+
+
+**How it works**
+
+Tokenizer is not just splitting words, it has steps:
+
+1. **Normalizer** → cleans text ("HELLO" → "hello")
+2. **Pre-tokenizer** → splits text
+3. **Model** → creates subwords (BPE, WordPiece)
+4. **Post-processing** → adds special tokens
+5. **Decoder** → converts back to text
+
+
+
+**Key Features**
+
+*  Very fast (built in Rust)
+*  Supports BPE, WordPiece, Unigram
+*  Adds special tokens automatically
+*  Handles padding & truncation
+*  Keeps track of token positions
+
+---
+
+**Special Tokens**
+
+* `[CLS]` → start of sentence
+* `[SEP]` → separator
+* `[PAD]` → padding
+* `[UNK]` → unknown words
+
+
+
+**Padding & Truncation**
+
+* **Padding** → make all inputs same length
+* **Truncation** → cut long text
+
+
+
+**Vocabulary**
+
+* Tokenizer creates a **dictionary (vocab)**
+* Each word/subword gets a number
+* Unknown words are split into smaller parts
+
+
+
+**Why it is important**
+
+* First step in every NLP/LLM pipeline
+* Affects model performance
+* Impacts speed and cost
+
+
+**Advantages**
+
+* Very fast
+* Flexible
+* Easy to use with models
+* Handles large data
+
+
+**Disadvantages**
+
+* Can be confusing for beginners
+* Many options/settings
+* Must match tokenizer with model
+
+
+
+**Final Idea**
+
+Tokenizer = bridge between **text and AI model**
+
+Without tokenizer → model cannot understand anything.
+
+---
+
+**4. | ["The Illustrated Transformer" — Jay Alammar](https://jalammar.github.io/illustrated-transformer/) | Visual walkthrough |**
+
+---
+
+**The Illustrated Transformer (Jay Alammar)**
+
+**What is it**
+
+* Not a research paper
+* A **visual blog guide** explaining the Transformer model
+* Makes a complex topic **easy using diagrams**
+
+
+
+**Why it became popular**
+
+* Original Transformer paper was **hard to understand**
+* This guide explains it in a **simple, step-by-step way**
+* Helped many people learn **how GPT/BERT work**
+
+
+
+**What is inside**
+
+**Big Idea**
+
+Transformer = model that uses **attention** instead of RNN/CNN
+
+
+**Main Steps**
+
+1. **Input Embedding**
+
+   * Words → numbers (vectors)
+
+2. **Positional Encoding**
+
+   * Adds word order information
+
+3. **Self-Attention (Core)**
+
+   * Each word looks at other words
+   * Decides what is important
+
+4. **Query, Key, Value**
+
+   * Query → what I want
+   * Key → what I match
+   * Value → actual info
+
+5. **Multi-Head Attention**
+
+   * Multiple attentions at once
+   * Learns different patterns
+
+6. **Feed Forward Network**
+
+   * Small neural network per word
+
+7. **Add & Normalize**
+
+   * Helps stable training
+
+8. **Decoder**
+
+   * Generates output word-by-word
+   * Uses masking (no future words)
+
+9. **Final Output**
+
+   * Predict next word using Softmax
+
+
+
+**Key Takeaways**
+
+* Uses **attention instead of sequence processing**
+* Processes all words **in parallel**
+* Captures **long-distance relationships**
+* Foundation of modern LLMs
+
+
+
+**Advantages**
+
+* Faster than RNN (parallel processing)
+* Understands long context well
+* Scales to large data
+* Works for text, images, code
+
+
+
+**Disadvantages**
+
+* High computation cost (O(n²))
+* Needs large data
+* Needs positional encoding
+* Hard to fully interpret
+
+
+
+**Simple Intuition**
+
+Old models:
+
+```
+Read words one by one (slow)
+```
+
+Transformer:
+
+```
+Looks at all words together (smart & fast)
+```
+
+---
+
+**Final Summary**
+
+* Best beginner-friendly explanation of Transformers
+* Focuses on self-attention (main idea)
+* Helps understand GPT, BERT, and LLMs
+* Must-learn if you want to study modern AI
+
+---
+
 
