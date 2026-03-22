@@ -122,7 +122,7 @@ you might only need one:
 
 ---
 
-#####  The Problem With the Old Way (RNNs)
+### The Problem With the Old Way (RNNs)
 
 Before Transformers, we used Recurrent Neural Networks (RNNs) and their improved version, LSTMs.
 Here is the fundamental bottleneck that held them back:
