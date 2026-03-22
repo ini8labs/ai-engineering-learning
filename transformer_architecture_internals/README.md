@@ -122,7 +122,7 @@ you might only need one:
 
 ---
 
-### The Problem With the Old Way (RNNs)
+###  The Problem With the Old Way (RNNs)
 
 Before Transformers, we used Recurrent Neural Networks (RNNs) and their improved version, LSTMs.
 Here is the fundamental bottleneck that held them back:
@@ -1398,7 +1398,7 @@ PROMPT: "The cat sat on the"
 
 ---
 
-See implementation in `C:\Users\SOUMILI\Documents\Code\ai-engineering-learning\transformer_architecture_internals\transformer_encoder_block.ipynb`
+See implementation in `E:\ini8_labs\ai-engineering-learning\transformer_architecture_internals\transformer_encoder_block.ipynb`
 
 
 **Transformer Encoder Block (PyTorch)**
@@ -1481,7 +1481,7 @@ Shape remains same because this block only transforms information, not dimension
 
 ---
 
-See the implementation in `C:\Users\SOUMILI\Documents\Code\ai-engineering-learning\transformer_architecture_internals\attention_heads_different.ipynb`
+See the implementation in `E:\ini8_labs\ai-engineering-learning\transformer_architecture_internals\attention_heads_different.ipynb`
 
 **Transformer Attention Heads Experiment**
 
@@ -1592,14 +1592,335 @@ Example output:
 
 **Exercise 3: Implement RMSNorm and compare its speed to standard LayerNorm using PyTorch benchmarking.**
 
+---
+
+See implementation in `E:\ini8_labs\ai-engineering-learning\transformer_architecture_internals\rmsnorm_layernorm_comapre.ipynb`
+
+
+**RMSNorm vs LayerNorm Benchmark (PyTorch)**
+
+**Overview**
+
+This project compares the performance of **LayerNorm** and **RMSNorm** in PyTorch.
+The goal is to see which normalization technique is faster on large inputs.
+
+
+**What is happening here**
+
+* **LayerNorm**: Normalizes using mean + variance
+* **RMSNorm**: Normalizes using only root mean square (no mean)
+
+RMSNorm is simpler, so it is expected to be faster.
+
+
+**Setup**
+
+* Uses **PyTorch**
+* Runs on **GPU (if available)**
+* Uses:
+
+  * `torch.compile()` for optimization
+  * `autocast()` for mixed precision (faster computation)
+
+
+**Model Details**
+
+* Batch size: `256`
+* Sequence length: `1024`
+* Hidden size (`d_model`): `2048`
+
+These large values help simulate real Transformer workloads.
+
+
+
+**Key Components**
+
+**1. Optimization Tricks**
+
+* `torch.compile()` → speeds up execution
+* `torch.autocast()` → uses lower precision (faster on GPU)
+* Warmup runs → stabilize performance before timing
+
+
+
+**2. Benchmarking**
+
+* Runs each model **1000 times**
+* Measures total execution time
+* Uses `torch.cuda.synchronize()` for accurate GPU timing
+
+
+
+**Output**
+
+Example:
+
+```
+LayerNorm Time: 19.7979 sec
+RMSNorm Time:  17.6696 sec
+RMSNorm is faster
+```
+
+**Why RMSNorm may be faster**
+
+* No mean calculation → fewer operations
+* Simpler math → better GPU efficiency
+* Works well in modern Transformers (like LLaMA)
+
+
+**Important Notes**
+
+* Sometimes **LayerNorm may still be faster** due to:
+
+  * PyTorch kernel optimizations
+  * GPU behavior
+  * Precision settings (fp16 vs bf16)
+
+**So results can vary**
+
+
+**Conclusion**
+
+* RMSNorm is theoretically simpler and often faster
+* But real-world performance depends on hardware + implementation
+
+
+**Simple Takeaway**
+
+ *RMSNorm = simpler + often faster*
+ *LayerNorm = more stable + widely used*
+
+---
+
 **Exercise 4: Write a function that generates text using temperature + top-p sampling. Compare outputs at different temperatures.**
+
+---
+
+See implementation in `E:\ini8_labs\ai-engineering-learning\transformer_architecture_internals\temperature_differ.ipynb`
+
+**Top-p Sampling with GPT-2**
+**What is this project**
+
+This project shows how to generate text using a small language model (GPT-2) with Top-p (Nucleus) Sampling and Temperature control.
+
+It helps you understand how randomness affects text generation.
+
+**Installation**
+
+`pip install transformers`
+
+**Libraries Used**
+
+* torch → for tensor operations
+
+* transformers → to load GPT-2 model and tokenizer
+
+**What the Code Does**
+
+**1. Load Model**
+
+* Loads a small GPT-2 model
+
+* Sets it to evaluation mode
+
+**2. Top-p Sampling (Core Idea)**
+
+* Converts logits → probabilities
+
+* Sorts tokens by probability
+
+* Keeps only the smallest set of tokens whose total probability ≥ top_p
+
+* Removes the rest
+
+* Samples from remaining tokens
+
+**Simple idea:**
+
+       “Only choose from the most likely words until we reach 90% probability.”
+
+**3. Temperature Control**
+
+Adjusts randomness:
+
+* Low (0.5) → safer, repetitive text
+
+* Medium (1.0) → balanced
+
+* High (1.5) → more creative, sometimes messy
+
+**4. Text Generation Loop**
+
+* Takes a prompt (e.g., "Once upon a time")
+
+* Predicts next word step by step
+
+* Stops when:
+
+   * max length reached OR
+
+   * EOS token appears
+
+**Function Overview**
+
+1. top_p_sampling(logits, top_p=0.9)
+
+  * Filters tokens using cumulative probability
+
+  * Samples next token from filtered set
+
+2. generate_text(prompt, max_length, temperature, top_p)
+
+* Encodes input text
+
+* Generates tokens one by one
+
+* Applies:
+
+   * temperature scaling
+
+   * top-p sampling
+
+* Returns final generated text
+
+**Experiment**
+
+We test with different temperatures:
+
+`temps = [0.5, 1.0, 1.5]`
+
+**Expected Behavior:**
+
+**Temperature   ----> 	Output Style**
+
+0.5	----->  Safe, repetitive
+
+1.0 ----> 	Balanced
+
+1.5	---->   Creative, random
+
+**Key Concepts**
+
+* Logits → raw scores from model
+
+* Softmax → converts scores → probabilities
+
+* Top-p → keeps only most important words
+
+* Temperature → controls randomness
+
+**Why Use Top-p Sampling**
+
+* Avoids boring text (like greedy decoding)
+
+* Avoids too random text (like full sampling)
+
+* Gives balanced and natural output
+
+**Notes**
+
+* GPT-2 is small → output may not always be perfect
+
+* Higher temperature can produce weird sentences
+
+* Top-p value usually works well between 0.8–0.95
+
+**Example Prompt**
+
+       Once upon a time
+
+**Summary**
+
+This project teaches:
+
+* How text generation works step-by-step
+
+* How randomness affects output
+
+* Why Top-p sampling is useful
+
+---
+
 
 **Exercise 5: Calculate the total parameters for a Transformer with d_model=512, n_heads=8, d_ff=2048, n_layers=6.**
 
 ---
 
+**Given**
 
+* 𝑑𝑚𝑜𝑑𝑒𝑙 = 512
 
+* 𝑛ℎ𝑒𝑎𝑑𝑠 = 8 (important: does NOT change total params)
+
+* 𝑑𝑓𝑓 = 2048
+
+* 𝑛𝑙𝑎𝑦𝑒𝑟𝑠 = 6
+
+**Step 1: Understand 1 Transformer Layer**
+
+Each layer has 2 main parts:
+
+1. Multi-Head Attention (MHA)
+
+We have 4 weight matrices:
+
+𝑊𝑄, 𝑊𝐾, 𝑊𝑉, 𝑊𝑂​
+
+Each is:
+
+       512 × 512
+
+So total:
+
+       4 × ( 512 × 512 ) = 4 × 262144 = 1,048,576
+
+2. Feed Forward Network (FFN)
+
+Two linear layers:
+
+* First: 512 → 2048
+
+* Second: 2048 → 512
+
+So:
+
+       ( 512 × 2048 ) + ( 2048 × 512 )
+       = 1,048,576 + 1,048,576 = 2,097,152
+
+**Step 2: Total per layer**
+
+         MHA+FFN
+      = 1,048,576 + 2,097,152 = 3,145,728
+
+**Step 3: Multiply by 6 layers**
+
+      6 × 3,145,728 = 18,874,368
+
+**Final Answer**
+
+      Total parameters = 18,874,368 (~18.87M)
+
+**Important Insights**
+
+1. Heads don’t increase parameters
+
+    Even though there are 8 heads:
+
+     * We split 512 into 8 parts
+
+     * But total matrix size remains same
+
+So no extra parameters
+
+2. FFN is the biggest part
+
+    * Attention: ~1M
+
+    * FFN: ~2M
+
+FFN dominates (~2× larger)
+
+---
 
 ## Further Reading
 
@@ -1827,5 +2148,244 @@ Move LayerNorm before sublayer
 **Normalize before processing → stable training**
 
 ---
+**3. GLU Variants Improve Transformer (2020)**
+
+---
+
+
+**What is this paper about**
+
+This paper improves the **Transformer Feed Forward Network (FFN)** by replacing normal activation functions (like ReLU/GELU) with **GLU-based gating mechanisms**.
+
+Result: **Better performance with almost same cost**
+
+
+**Why was this needed**
+
+* Transformer attention was already strong
+* But FFN part was **too simple**:
+
+  ```
+  Linear → ReLU → Linear
+  ```
+* ReLU only turns things ON/OFF (not flexible)
+
+Idea: Add **gating (control)** to make FFN smarter
+
+
+**What is GLU**
+
+GLU = **Gated Linear Unit**
+
+```
+GLU(x) = (xW1) ⊗ activation(xW2)
+```
+
+Two parts:
+
+* One creates features
+* One controls (gate) how much to pass
+
+Multiply both → smarter output
+
+
+**GLU Variants in the paper**
+
+| Variant  | Gate Activation |
+| -------- | --------------- |
+| ReGLU    | ReLU            |
+| GEGLU    | GELU            |
+| SwiGLU  | Swish (best)    |
+
+
+
+**Architecture Change**
+
+**Before:**
+
+```
+x → Linear → ReLU → Linear
+```
+
+**After:**
+
+```
+x → Linear1 → feature
+x → Linear2 → gate
+feature × gate → output
+```
+
+
+**Key Results**
+
+* GLU variants perform **better than ReLU/GELU**
+* Improve:
+
+  * Language modeling
+  * NLP benchmarks (GLUE, SQuAD)
+* **SwiGLU works best**
+
+
+**Why does it work**
+
+* Adds **control over information flow**
+* More expressive than simple activation
+* Smooth gating helps training
+
+Model learns:
+
+* what to keep
+* what to ignore
+
+
+**Advantages**
+
+*  Better performance
+*  Easy to implement
+*  No major extra compute
+*  Used in modern LLMs (like LLaMA)
+
+
+**Disadvantages**
+
+*  Slightly more parameters
+*  More complex than ReLU
+*  No strong theoretical explanation
+*  Improvement is incremental (not huge)
+
+**Why it matters**
+
+Shows that even **small FFN changes can improve Transformers**
+
+Today:
+
+* SwiGLU is widely used in large models
+
+
+
+**One-line Summary**
+
+**GLU variants add a gating mechanism to Transformer FFN, making it more powerful and improving performance with minimal cost.**
+
+
+**Quick Intuition**
+
+* ReLU = simple ON/OFF
+* GLU = “how much should pass?”
+
+More control = better learning
+
+---
+**4. The Annotated Transformer (Harvard NLP)**
+
+---
+
+
+**What is this**
+
+The Annotated Transformer is a **simple, step-by-step explanation + code implementation** of the Transformer model.
+
+It helps you understand how Transformers work in an easy and practical way.
+
+
+**Why was it created**
+
+The original Transformer paper was:
+
+* Hard to understand 
+* Full of math
+* Not beginner-friendly
+
+This project was created to:
+
+* Explain concepts clearly
+* Show working code
+* Make learning easier
+
+
+**What does it include**
+
+* Full Transformer implementation (PyTorch)
+* Clear explanations for each part
+* Comments in code
+* Examples of training
+
+
+**Key Concepts**
+
+1. Embedding
+
+Convert words → numbers (vectors)
+
+2. Positional Encoding
+
+Adds position info (since model doesn’t read in order)
+
+3. Self-Attention
+
+Each word looks at all other words to understand meaning
+
+4. Multi-Head Attention
+
+Multiple attention layers learn different relationships
+
+5. Feed Forward Network (FFN)
+
+Simple neural network applied to each word
+
+6. Add & Norm
+
+* Residual connections (skip)
+* Normalization for stable training
+
+7. Encoder-Decoder
+
+* Encoder → understands input
+* Decoder → generates output
+
+
+
+**Advantages**
+
+* Easy to understand Transformer
+* Clean and readable code
+* Great for beginners
+* Helps build strong fundamentals
+
+
+**Disadvantages**
+
+* Not optimized for speed
+* Not production-ready
+* Missing modern improvements
+* Still a bit complex for beginners
+
+
+**When should you use this**
+
+Use this if you want to:
+
+* Learn how Transformers work
+* Understand attention clearly
+* Study real implementation
+
+
+**When not to use**
+
+Avoid if you want:
+
+* Production-level code
+* Fast or optimized models
+
+
+**Summary**
+
+* Beginner-friendly Transformer explanation
+* Combines theory + code
+* Best for learning, not for deployment
+
+
+---
+
 
 
