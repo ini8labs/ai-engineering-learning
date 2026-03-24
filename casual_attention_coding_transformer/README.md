@@ -549,33 +549,781 @@ Examples:
 
 ## Exercises
 
-1. **Train it!** Run the Mini-GPT on Shakespeare text. Watch the loss drop and the text improve.
+---
 
-2. **Try RMSNorm** — Replace `LayerNorm` with `RMSNorm` (no bias term). Does training stabilize?
+**Implement SwiGLU activation in the FFN. Compare training curves with GELU.**
 
-3. **Try SwiGLU** — Replace `GELU` activation with `SwiGLU` (used in Llama). Compare training curves.
+---
 
-4. **Add GQA** — Implement Grouped Query Attention where `n_kv_heads < n_heads`. How much memory do you save?
+See implementation in `E:\ini8_labs\ai-engineering-learning\casual_attention_coding_transformer\swiglu_gelu_comparisson.ipynb`
 
-5. **Count GPT-3 params** — Using the formula, calculate parameters for:
-   - `d_model=12288, n_heads=96, n_layers=96, d_ff=49152, vocab=50257`
-   - Does your answer match the reported 175B?
+**SwiGLU vs GELU in Mini-GPT**
 
-6. **Implement KV-Cache** — During generation, avoid recomputing K and V for previous tokens. How much faster does generation become?
 
-7. **Depth vs Width** — Train two models with similar parameter counts:
-   - Model A: 2 layers, d_model=512
-   - Model B: 8 layers, d_model=256
-   - Which learns better patterns?
+
+**Overview**
+
+This project compares two activation functions in a Transformer (Mini-GPT):
+
+* **GELU** (standard)
+* **SwiGLU** (modern, gated)
+
+We train both models on the Tiny Shakespeare dataset and compare their training loss.
+
+
+**What the Code Does**
+
+1. Loads text data (Shakespeare)
+2. Converts text into tokens (numbers)
+3. Builds a small GPT model
+4. Uses:
+
+   * GELU in one model
+   * SwiGLU in another
+5. Trains both models
+6. Plots training loss graph
+
+
+**Key Idea**
+
+### GELU
+
+* Simple activation function
+* Learns faster in the beginning
+
+**SwiGLU**
+
+* Uses a **gating mechanism**
+* Learns slower at first
+* Performs better later
+
+
+**Result (From Graph)**
+
+* Both models learn properly 
+* GELU improves faster early
+* SwiGLU catches up later
+* SwiGLU often gets **slightly lower final loss**
+
+
+**Conclusion**
+
+* GELU → good for fast learning
+* SwiGLU → better for final performance
+* SwiGLU is used in modern large models
+
+---
+
+**Modify the model to use RMSNorm instead of LayerNorm. Does training stability change?**
+
+---
+
+See implementation in `E:\ini8_labs\ai-engineering-learning\casual_attention_coding_transformer\comparison_layernorm_rmsnorm.ipynb`
+
 
 ---
 
 ## Further Reading
 
-- 📄 [GPT-3 Paper](https://arxiv.org/abs/2005.14165) — "Language Models are Few-Shot Learners"
-- 📄 [Llama 2 Paper](https://arxiv.org/abs/2307.09288)
-- 💻 [nanoGPT by Karpathy](https://github.com/karpathy/nanoGPT) — Minimal working GPT code
-- 📄 [Attention Is All You Need](https://arxiv.org/abs/1706.03762) — The original Transformer paper
+**1. "Language Models are Few-Shot Learners" (Brown et al., 2020) — GPT-3 paper**
 
 ---
 
+
+**Overview**
+
+This paper introduces **GPT-3**, a very large language model that can perform many tasks **without task-specific training**.
+Instead of fine-tuning, it learns from **examples given in the prompt**.
+
+
+**Why this paper is important**
+
+Before GPT-3:
+
+* Models needed **separate training for each task**
+* Required **labeled data**
+* Not flexible
+
+GPT-3 changed this by showing:
+
+  One model can do many tasks using just prompts
+
+
+**Key Idea: Few-Shot Learning**
+
+GPT-3 can learn tasks from examples inside the input.
+
+**Example:**
+
+```
+English → French
+dog → chien
+cat → chat
+house →
+```
+
+Output: *maison*
+
+* No training required
+* Learns from context
+
+**Types of Learning**
+
+* **Zero-shot** → No examples
+* **One-shot** → One example
+* **Few-shot** → Few examples
+
+
+**How GPT-3 Works**
+
+* Based on **Transformer architecture**
+* Trained on **large internet text**
+* Predicts the **next word in a sequence**
+* Uses patterns learned during training
+
+
+**Key Insight**
+
+> Bigger models + more data = better performance
+
+This idea is called **scaling**.
+
+
+**What GPT-3 Can Do**
+
+* Translation
+* Question answering
+* Summarization
+* Text generation
+* Basic coding
+
+All using the same model
+
+
+**Advantages**
+
+* No need for fine-tuning
+* Works for many tasks
+* Needs very little data (few examples)
+* Easy to use (just write prompts)
+* Strong generalization ability
+
+
+**Disadvantages**
+
+* Very expensive to train
+* Can give wrong answers (hallucination)
+* Sensitive to prompt wording
+* No real understanding (just pattern prediction)
+* Can contain bias from training data
+
+
+**Important Note**
+
+GPT-3 does **not actually learn during use**
+It only uses patterns learned during training to predict outputs
+
+**Why This Paper Changed AI**
+
+Before:
+
+* Task-specific models
+
+After:
+
+* General-purpose language models
+
+Led to modern AI systems like chatbots and assistants
+
+
+**Simple Analogy**
+
+* Old models → need training for every task
+* GPT-3 → learns from examples instantly
+
+
+**Final Takeaway**
+
+> A very large language model can perform many tasks using just a few examples, without retraining.
+
+
+
+---
+
+**2. "Exploring the Limits of Transfer Learning with a Unified Text-to-Text Transformer" (Raffel et al., 2019) — T5 paper**
+
+---
+
+
+
+**What is this paper about**
+
+This paper introduces **T5 (Text-to-Text Transfer Transformer)**.
+
+Main idea:
+Convert **every NLP task into a text-to-text problem**
+
+* Input = text
+* Output = text
+
+One model can do **all tasks**
+
+**Why this paper came**
+
+Before T5:
+
+* Different models for different tasks
+* Complex pipelines
+* Hard to compare methods
+
+T5 solves this by:
+
+* Using **one unified framework**
+* Making everything simple and consistent
+
+
+**Core Idea**
+
+All tasks → **Text → Text format**
+
+**Examples:**
+
+* Sentiment:
+
+  ```
+  "sentiment: I love this movie" → "positive"
+  ```
+
+* Translation:
+
+  ```
+  "translate English to German: Hello" → "Hallo"
+  ```
+
+* Question Answering:
+
+  ```
+  "question: What is AI? context: ..." → "Artificial Intelligence"
+  ```
+
+
+
+**Model Architecture**
+
+* Based on **Transformer**
+* Uses:
+
+  * Encoder → understands input
+  * Decoder → generates output
+
+Works for both understanding + generation tasks
+
+
+
+**Training Method**
+
+**Pretraining:**
+
+* Dataset: Large cleaned web data (C4)
+
+**Objective:**
+
+**Fill in the blanks (Denoising)**
+
+Example:
+
+```
+Input:  "I love <mask> learning"
+Output: "deep"
+```
+
+ Model learns context better
+
+
+
+**Key Findings**
+
+* Encoder–Decoder works better than other setups
+* Clean and large data is very important
+* Denoising objective gives best results
+* Bigger models perform better
+
+
+**Advantages**
+
+* One model for all NLP tasks
+* Simple and flexible
+* Strong performance
+* Easy multi-task learning
+* Good for transfer learning
+
+
+**Disadvantages**
+
+* Requires high compute power
+* Slow during text generation
+* Hard to train from scratch
+* Not always best for specialized tasks
+
+
+**Why T5 is Important**
+
+* Simplified NLP pipeline
+* Introduced unified framework
+* Influenced modern LLMs
+* Helped in prompt-based learning
+
+
+**Key Takeaways**
+
+* Convert everything to **text-to-text**
+* Use encoder–decoder transformer
+* Train using fill-in-the-blanks
+* Data quality matters a lot
+* Bigger models = better results
+
+**One Line Summary**
+
+T5 =
+**One model that solves all NLP tasks using text input and text output**
+
+---
+
+**3. nanoGPT by Andrej Karpathy — Minimal GPT implementation**
+
+---
+
+**What is nanoGPT**
+
+**nanoGPT** is a small and simple version of GPT (like ChatGPT) made for learning.
+
+It is created by Andrej Karpathy to help people understand how GPT works inside.
+
+
+**Main Idea**
+
+GPT models work by:
+
+> Predicting the **next word (or character)** in a sentence.
+
+Example:
+
+```
+Input:  "I love"
+Output: "coding" / "AI"
+```
+
+This is called **next token prediction**.
+
+
+**Why nanoGPT was created**
+
+Before nanoGPT:
+
+* GPT models were very large
+* Code was complex
+* Hard for beginners to understand
+
+nanoGPT solves this by:
+
+* Keeping code **small and clean**
+* Showing only **important parts**
+* Making learning **easy**
+
+
+**What nanoGPT contains**
+
+**1. Model**
+
+* Transformer-based GPT
+* Includes:
+
+  * Attention
+  * Feedforward layers
+
+
+**2. Training**
+
+* Reads text data
+* Learns patterns
+* Updates model weights
+
+
+**3. Text Generation**
+
+* Generates text like:
+
+```
+ROMEO: What light through yonder window breaks?
+```
+
+
+**How it works**
+
+```
+Text → Tokens → Train Model → Generate Text
+```
+
+
+**Key Features**
+
+* Very small code (easy to read)
+* Runs on normal laptop/GPU
+* Easy to modify
+* Good for experiments
+
+
+
+**Advantages**
+
+* Easy to understand
+* Great for beginners
+* Full control of model
+* Helps learn transformers deeply
+* Fast experimentation
+
+
+**Disadvantages**
+
+* Not for real-world production
+* Cannot train very large models
+* Limited features
+* Less optimized
+
+**Important Concepts You Learn**
+
+**1. Next Token Prediction**
+
+Model learns to guess next word
+
+
+**2. Attention Mechanism**
+
+Helps model understand relationships between words
+
+
+**3. Training Loop**
+
+* Forward pass
+* Loss calculation
+* Backpropagation
+
+
+**4. Tokenization**
+
+Converting text into numbers
+
+
+**5. Text Generation**
+
+Using:
+
+* Temperature
+* Top-k / Top-p
+
+
+**Important Lessons**
+
+* Data quality matters more than model size
+* Training process is very important
+* Small changes can affect results a lot
+* Bigger models need more compute
+
+
+
+**When to Use nanoGPT**
+
+Use it if:
+
+* You want to learn GPT
+* You want to experiment
+* You want to understand transformers
+
+Do NOT use it if:
+
+* You want to build production apps
+* You need large-scale models
+
+
+**Final Summary**
+
+nanoGPT is:
+
+* A **learning tool**
+* A **minimal GPT implementation**
+* A **playground for experiments**
+
+---
+
+**4. "Llama 2: Open Foundation and Fine-Tuned Chat Models" (Touvron et al., 2023)**
+
+---
+
+
+
+**What is LLaMA 2**
+
+LLaMA 2 is a **large language model (LLM)** like ChatGPT.
+
+It can:
+
+* Answer questions
+* Generate text
+* Help in coding
+* Chat like a human
+
+It comes in different sizes:
+
+* 7B (small)
+* 13B (medium)
+* 70B (large)
+
+
+**Why was this paper created**
+
+Before LLaMA 2:
+
+* Powerful models (like GPT-4) were **closed**
+* People could not use or modify them
+
+Meta wanted to:
+
+* Make AI **open and accessible**
+* Give developers **control**
+* Enable research and innovation
+
+
+
+**Types of Models**
+
+**1. Base Model**
+
+* Just predicts next word
+* Not good for chatting
+
+**2. Chat Model (LLaMA 2-Chat)**
+
+* Trained for conversation
+* More helpful and safe
+
+
+**How it works**
+
+**Step 1: Pretraining**
+
+* Learns from large internet text
+
+**Step 2: Supervised Fine-Tuning (SFT)**
+
+* Humans give good answers
+* Model learns how to respond properly
+
+**Step 3: RLHF (Human Feedback)**
+
+* Humans rank answers
+* Model improves based on feedback
+
+
+**Key Ideas**
+
+* Good **data quality** is very important
+* Bigger models are better, but expensive
+* Chat models need **human feedback**
+* Safety is still a challenge
+
+
+**Improvements over LLaMA 1**
+
+* Better training data
+* More stable performance
+* Longer context (remembers more text)
+* Faster attention (GQA)
+* Better chat ability
+
+
+**Advantages**
+
+* Open and usable
+* Strong performance
+* Can be customized (fine-tuning)
+* Cheaper than API-based models
+* Good for research and projects
+
+
+**Disadvantages**
+
+* Not as powerful as top closed models
+* Needs high GPU for large versions
+* Can give wrong answers (hallucination)
+* Safety not perfect
+* Requires tuning for best results
+
+
+**Is it fully open**
+
+ Not fully
+
+*  Model weights are available
+*  Training data not fully shared
+
+ So it is **partially open**
+
+
+
+**Real-World Uses**
+
+* Chatbots
+* Coding assistants
+* AI in DevOps
+* Research experiments
+* Private AI systems
+
+
+**Key Takeaways**
+
+* LLaMA 2 made AI **more accessible**
+* Open models can compete with closed ones
+* Human feedback (RLHF) is very important
+* Data quality matters more than size
+* It started the **open LLM movement**
+
+
+**One-Line Summary**
+
+ **LLaMA 2 = Open-source ChatGPT-like model that you can use and customize**
+
+
+
+---
+
+**5. "The Llama 3 Herd of Models" (Dubey et al., 2024)**
+
+---
+
+**What is this paper**
+
+Llama 3 is a family of powerful AI language models created by Meta.
+
+Means:
+- Not one model
+- But multiple models of different sizes
+
+These models can:
+- Chat 
+- Write code 
+- Solve problems 
+- Understand long text 
+
+
+**Why did Llama 3 come**
+
+Before this:
+- Powerful models (like GPT-4) existed
+- But they were mostly closed (not accessible)
+
+Meta wanted to:
+- Build powerful models
+- Make them more open and usable
+- Compete with top AI systems
+
+
+There are multiple models:
+
+| Model | Use |
+|------|-----|
+| 8B | Fast, cheap tasks |
+| 70B | Balanced tasks |
+| 405B | Very powerful tasks |
+
+One model cannot fit all needs  
+So they created a “team of models”
+
+
+**Key Ideas**
+
+**1. Bigger + Better Training**
+- Trained on huge data (~15T tokens)
+- More data = better performance
+
+
+**2. Same Architecture**
+- Uses Transformer (not new architecture)
+
+Improvement comes from:
+- Data
+- Training process
+
+
+**3. Strong Capabilities**
+- Reasoning
+- Coding
+- Multi-language
+- Long context understanding
+
+
+**4. Alignment**
+- Fine-tuned to be helpful and safe
+- Raw model → smart but risky
+- Aligned model → useful
+
+
+**Advantages**
+
+* Open-weight (can be used by developers)  
+* Very strong performance  
+* Different sizes for different needs  
+* One model can do many tasks  
+* Long context support  
+
+
+
+**Disadvantages**
+
+* Large models are very expensive  
+* Not fully open (license restrictions)  
+* Can hallucinate (give wrong answers)  
+* Safety risks (can be misused)  
+
+
+**Important Learnings**
+
+**1. Scaling works**
+Bigger model + more data = better results
+
+
+**2. Data is most important**
+Good data > fancy architecture
+
+
+**3. Training pipeline matters**
+- Data cleaning
+- Deduplication
+- Smart training order
+
+
+**4. Alignment is key**
+
+Makes model safe and usable
+
+
+**5. System thinking**
+
+Not one model → multiple models (herd)
+
+
+
+**Final Summary**
+
+Llama 3 shows that:
+
+- You don’t need new architecture  
+- You need better data and training  
+- Multiple models (herd) are better than one  
+- Open models can compete with top AI  
+
+
+**One-line takeaway**
+
+“Llama 3 is a group of models trained on massive high-quality data, showing that scaling and system design matter more than new architecture.”
+
+---
