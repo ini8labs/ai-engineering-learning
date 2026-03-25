@@ -551,7 +551,7 @@ Examples:
 
 ---
 
-**Implement SwiGLU activation in the FFN. Compare training curves with GELU.**
+**1. Implement SwiGLU activation in the FFN. Compare training curves with GELU.**
 
 ---
 
@@ -614,11 +614,379 @@ We train both models on the Tiny Shakespeare dataset and compare their training 
 
 ---
 
-**Modify the model to use RMSNorm instead of LayerNorm. Does training stability change?**
+
+**2. Add Grouped Query Attention (GQA) where n_kv_heads < n_heads. How does this affect memory usage?**
 
 ---
 
-See implementation in `E:\ini8_labs\ai-engineering-learning\casual_attention_coding_transformer\comparison_layernorm_rmsnorm.ipynb`
+
+This project shows a **simple and clear implementation of GQA (Grouped Query Attention)** using PyTorch.
+
+See implementation in `E:\ini8_labs\ai-engineering-learning\casual_attention_coding_transformer\gqa_week4.ipynb`
+
+**What is GQA**
+
+In normal attention:
+
+* Every **Query (Q)** head has its own **Key (K)** and **Value (V)**
+
+In GQA:
+
+* Multiple **Query heads share the same K and V heads**
+* This reduces **memory usage** and improves **efficiency**
+
+
+
+**Model Configuration**
+
+| Parameter    | Value |
+| ------------ | ----- |
+| `d_model`    | 256   |
+| `n_heads`    | 8     |
+| `n_kv_heads` | 2     |
+
+This means:
+
+* 8 Query heads
+* Only 2 Key/Value heads
+* Each KV head is shared by **4 Query heads**
+
+
+**Code Explanation**
+
+**1. Linear Layers**
+
+```python
+self.q = nn.Linear(d_model, d_model)
+self.k = nn.Linear(d_model, n_kv_heads * head_dim)
+self.v = nn.Linear(d_model, n_kv_heads * head_dim)
+```
+
+* Q → full heads (8)
+* K, V → fewer heads (2)
+
+
+**2. Reshaping**
+
+```python
+q = self.q(x).view(B, T, n_heads, head_dim)
+k = self.k(x).view(B, T, n_kv_heads, head_dim)
+v = self.v(x).view(B, T, n_kv_heads, head_dim)
+```
+
+* Q has more heads
+* K and V have fewer heads
+
+
+**3. Sharing K & V**
+
+```python
+k = k.repeat_interleave(group, dim=2)
+v = v.repeat_interleave(group, dim=2)
+```
+
+This is the **core idea of GQA**
+
+* Each KV head is **copied** to match Query heads
+* Example:
+
+  * 2 KV heads → expanded to 8 heads
+
+
+**4. Attention Computation**
+
+```python
+score = (q @ k.transpose(-2, -1)) / sqrt(head_dim)
+weight = softmax(score)
+out = weight @ v
+```
+
+Same as standard attention:
+
+* Compute similarity
+* Apply softmax
+* Multiply with V
+
+
+**5. Final Output**
+
+```python
+out = out.reshape(B, T, C)
+return self.out(out)
+```
+
+* Merge all heads back
+* Pass through final linear layer
+
+
+**Test Run**
+
+```python
+x = torch.randn(2, 100, 256)
+model = SimpleGQA()
+y = model(x)
+```
+
+Output:
+
+```
+Output shape: (2, 100, 256)
+```
+
+
+**Memory Comparison**
+
+```python
+normal = n_heads * seq_len * head_dim
+gqa = n_kv_heads * seq_len * head_dim
+```
+
+**Result:**
+
+```
+Normal KV memory: 25600
+GQA KV memory: 6400
+Saved: 4 times less memory
+```
+
+**What Does "Memory" Mean Here**
+
+* It means **number of elements (numbers) stored in KV cache**
+* Not parameters
+* Not bytes (but proportional to memory)
+
+Example:
+
+* 25,600 numbers vs 6,400 numbers
+
+
+**Why GQA is Useful**
+
+* Reduces memory usage
+* Faster inference (less KV cache)
+* Scales better for long sequences
+
+
+**Key Insight**
+
+> GQA trades a small amount of flexibility for a big gain in efficiency
+> by sharing K and V across multiple Query heads.
+
+
+
+**Summary**
+
+* Q = many heads
+* K, V = fewer heads
+* K, V are shared → memory ↓
+* Performance remains strong
+
+---
+
+**3. Train two models: one with 2 layers of d_model=512 and one with 8 layers of d_model=256 (similar parameter count). Which performs better?**
+
+---
+See implementation in `E:\ini8_labs\ai-engineering-learning\casual_attention_coding_transformer\model_Comparisson_week4.ipynb`
+
+This project compares two Transformer models with **similar parameter count** but different designs:
+
+- **Model A (Wide & Shallow)** → 2 layers, d_model = 512  
+- **Model B (Deep & Narrow)** → 8 layers, d_model = 256  
+
+Goal: Find which performs better.
+
+
+**Idea Behind Experiment**
+
+We are testing:
+
+- Does **more layers (depth)** help learning
+- Or does **larger hidden size (width)** help more
+
+Even though both models have roughly similar parameters, their structure is different.
+
+
+
+**Dataset Used**
+
+- Tiny Shakespeare dataset (character-level text)
+- Model learns to predict next character
+
+
+**How It Works**
+
+**1. Data Processing**
+- Convert text → numbers (encoding)
+- Create batches of sequences
+
+**2. Model**
+- Token embedding + positional embedding
+- Transformer Encoder layers
+- LayerNorm + Linear output
+
+**3. Training**
+- Loss: Cross Entropy
+- Optimizer: AdamW
+- Train both models for same steps
+
+
+**Models Compared**
+
+| Model | Layers | d_model | Type |
+|------|--------|--------|------|
+| Model A | 2 | 512 | Wide & Shallow |
+| Model B | 8 | 256 | Deep & Narrow |
+
+
+**Expected Results**
+
+| Metric | Better Model |
+|--------|-------------|
+| Final Loss |  Deep Model |
+| Training Speed |  Wide Model |
+| Learning Ability |  Deep Model |
+
+
+**Final Conclusion**
+
+- Deep model (more layers) learns better patterns  
+- Wide model (bigger size) learns faster but less deeply  
+
+**Depth is more powerful than width when parameters are similar**
+
+
+**Important Notes**
+
+- Deep models may:
+  - Train slower
+  - Need proper tuning
+- Wide models:
+  - Faster
+  - Easier to train
+
+
+**Key Takeaway**
+
+> More layers = better understanding  
+> Bigger size = faster learning  
+
+Best models usually balance **depth + width**
+
+---
+
+
+**4. Implement KV-cache for faster inference (avoid recomputing K, V for previous tokens during generation).**
+
+---
+
+See implementation in `E:\ini8_labs\ai-engineering-learning\casual_attention_coding_transformer\kv_cache.ipynb`
+
+
+This project demonstrates how **KV Cache (Key-Value Cache)** speeds up text generation in a simple GPT-like model.
+
+
+**What is KV Cache**
+
+In transformer models, attention uses:
+- **Q (Query)**
+- **K (Key)**
+- **V (Value)**
+
+During generation:
+- Without KV cache → model recomputes **K and V for all previous tokens every step**
+- With KV cache → model **stores past K and V** and reuses them
+
+Result: Faster generation
+
+
+**What This Code Does**
+
+- Builds a **tiny GPT model**
+- Implements **attention with optional KV cache**
+- Generates text in two ways:
+  1.  Without KV cache (slow)
+  2.  With KV cache (fast)
+- Benchmarks the speed difference
+
+
+**Key Idea**
+
+**Without KV Cache**
+```
+Step 1: compute K,V for 1 token
+Step 2: compute K,V for 2 tokens
+Step 3: compute K,V for 3 tokens
+...
+```
+Repeats work → Slow
+
+
+**With KV Cache**
+```
+Step 1: compute K,V → store
+Step 2: reuse old K,V + compute new
+Step 3: reuse old K,V + compute new
+...
+```
+
+No recomputation → Fast
+
+
+**Components**
+
+**1. Attention**
+- Computes Q, K, V
+- Supports `past_k` and `past_v` (cache)
+
+**2. TinyGPT Model**
+- Embedding layer
+- Attention layer
+- Output layer
+
+**3. Tokenizer**
+- Simple character-level encoding
+
+**4. Generation Functions**
+
+ `generate_no_cache`
+- Recomputes everything each step
+
+`generate_kv_cache`
+- Uses cached K and V
+
+
+**Benchmark**
+
+The code measures:
+- Time without KV cache
+- Time with KV cache
+- Speedup factor
+
+Example output:
+```
+WITHOUT KV Cache Time: 0.35
+WITH KV Cache Time:    0.07
+Speedup: 4.4x
+```
+
+
+**Why KV Cache Matters**
+
+- Used in real LLMs like GPT
+- Reduces time complexity:
+  -  Without cache: O(n²)
+  -  With cache: O(n)
+
+
+
+> By using KV cache to avoid recomputing attention keys and values for previous tokens.
+
+
+**Summary**
+
+- KV cache = store past attention info
+- Avoids recomputation
+- Makes generation much faster
 
 
 ---
