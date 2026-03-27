@@ -427,6 +427,157 @@ Make sure the model stays consistent over time:
 
 ---
 
+# Exercises
+
+---
+
+**1. Build a complete data preprocessing pipeline in Python that handles text cleaning, deduplication, quality filtering, and tokenization.**
+
+---
+
+See implementation in `E:\ini8_labs\ai-engineering-learning\llm_training_at_scale\text_preprocessing_pipeline.ipynb`
+
+
+This project shows a **basic text preprocessing pipeline** for NLP / LLM training.
+
+It includes:
+
+* Text Cleaning
+* Deduplication
+* Quality Filtering
+* Tokenization
+
+
+**Steps in the Pipeline**
+
+**1. Cleaning**
+
+* Convert text to lowercase
+* Remove URLs
+* Remove emojis and special characters
+* Remove extra spaces
+
+
+**2. Deduplication**
+
+* Removes repeated text
+* Uses hashing to keep only unique sentences
+
+
+**3. Quality Filtering**
+
+* Removes very short text
+* Removes repetitive or low-quality text
+* Keeps only meaningful sentences
+
+
+**4. Tokenization**
+
+* Converts sentences into words (tokens)
+
+Example:
+
+```
+"machine learning is fun"
+→ ['machine', 'learning', 'is', 'fun']
+```
+
+
+**Example Output**
+
+```
+[
+ ['hello', 'this', 'is', 'a', 'sample', 'text'],
+ ['this', 'is', 'a', 'clean', 'and', 'meaningful', 'sentence'],
+ ['machine', 'learning', 'models', 'require', 'quality', 'data']
+]
+```
+
+
+**Why This is Useful**
+
+* Prepares data for Machine Learning / NLP
+* Improves model performance
+* Removes noisy and useless text
+
+
+**Summary**
+
+Raw Text → Clean → Unique → Filter → Tokenize → Ready Data
+
+---
+
+**2. Set up a simple distributed training script using PyTorch's DistributedDataParallel (DDP).**
+
+---
+
+See implementation in `E:\ini8_labs\ai-engineering-learning\llm_training_at_scale\ddp_week5.ipynb`
+
+**Simple PyTorch DDP**
+
+This project shows a **very simple example of Distributed Data Parallel (DDP)** using PyTorch.
+
+
+
+**What is DDP**
+
+DDP (Distributed Data Parallel) means:
+
+* Training a model using **multiple workers**
+* Each worker processes **different data**
+* Gradients are **shared automatically**
+
+In this example, we use **only 1 process** (Colab limitation), just to understand how DDP works.
+
+
+**Features**
+
+*  Works in **Google Colab**
+*  No multiprocessing errors
+*  Simple model (Linear layer)
+*  Dummy dataset (random data)
+*  Easy to understand
+
+
+**How It Works**
+
+1. Initialize distributed environment
+2. Create a simple model
+3. Wrap model with `DDP`
+4. Load data using `DistributedSampler`
+5. Train model normally
+6. Print loss after each epoch
+
+
+**Output Example**
+
+```
+Starting DDP...
+Process group initialized
+Model wrapped with DDP
+DataLoader ready
+Epoch 0, Loss 16.5835
+Epoch 1, Loss 14.6574
+Epoch 2, Loss 13.4509
+Training Finished!
+```
+
+
+**Important Notes**
+
+*  This is **NOT real multi-GPU training**
+*  Colab does not support full DDP properly
+*  This is only for **learning purpose**
+
+
+**Summary**
+
+* DDP helps train models faster using multiple workers
+* Colab supports only a **basic version**
+
+
+---
+
 
 
 
