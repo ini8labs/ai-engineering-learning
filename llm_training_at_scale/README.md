@@ -578,6 +578,228 @@ Training Finished!
 
 ---
 
+**3. Fine-tune a small language model (GPT-2 or similar) on instruction data using HuggingFace's TRL (Transformer Reinforcement Learning) library.**
+
+---
+
+See implementation in `E:\ini8_labs\ai-engineering-learning\llm_training_at_scale\finetune_with_sft.ipynb`
+
+
+**Overview**
+
+This project shows how to fine-tune a small language model (GPT-2) on instruction-based data using Hugging Face TRL (Supervised Fine-Tuning).
+
+The model learns to answer questions in an **Instruction → Response** format.
+
+
+**Steps**
+
+### 1. Install Libraries
+
+```bash
+pip install transformers datasets trl accelerate
+```
+
+
+**2. Load Dataset**
+
+We use a small subset of the Alpaca dataset:
+
+* Contains instruction and response pairs
+* Example:
+
+```
+Instruction: What is AI?
+Response: Artificial Intelligence is...
+```
+
+**3. Load Model**
+
+* Model used: GPT-2
+* Pre-trained language model
+* Tokenizer is also loaded
+
+
+**4. Format Data**
+
+We convert dataset into:
+
+```
+Instruction: <question>
+Response: <answer>
+```
+
+
+**5. Fine-Tuning using TRL**
+
+We use `SFTTrainer` from TRL:
+
+* Takes model + dataset
+* Trains model on instruction data
+
+Training command:
+
+```python
+trainer.train()
+```
+
+
+**6. Test Model**
+
+We generate output using:
+
+```python
+pipeline("text-generation")
+```
+
+Example:
+
+```
+Instruction: What is AI?
+Response:
+```
+
+
+**Training Settings**
+
+* Batch size: 2
+* Epochs: 1
+* Dataset size: 500 samples
+
+
+**Limitations**
+
+* Small dataset → weak learning
+* GPT-2 is not ideal for instruction tasks
+* Output may be repetitive or unclear
+
+
+**Improvements**
+
+* Increase dataset size (e.g., 2000 samples)
+* Train for more epochs (2–3)
+* Use better models like TinyLlama
+* Add repetition penalty during generation
+
+
+**Conclusion**
+
+This project demonstrates basic instruction fine-tuning using TRL.
+It is a simple starting point to understand how LLM training works.
+
+---
+
+**4. Simple Benchmark Evaluation.**
+
+---
+
+See implementation in `E:\ini8_labs\ai-engineering-learning\llm_training_at_scale\llm_benchmark.ipynb`
+
+This project shows how to evaluate a language model on simple multiple-choice questions using loss-based scoring.
+
+
+**What this does**
+
+* Loads a pre-trained LLM (Falcon 1B by default)
+* Tests it on multiple-choice questions
+* Picks the best answer based on lowest loss
+* Calculates overall accuracy
+
+
+**Installation**
+
+Run this first:
+
+```bash
+pip install transformers accelerate
+```
+
+
+**How it works**
+
+**Step 1: Load Model**
+
+* Loads tokenizer and model from Hugging Face
+* Automatically uses GPU if available
+
+**Step 2: Evaluate Each Choice**
+
+For every answer choice:
+
+* Create prompt:
+
+  ```
+  Question: ...
+  Answer: ...
+  ```
+* Compute loss
+* Lower loss = better answer
+
+**Step 3: Pick Best Answer**
+
+* Convert loss → score (`-loss`)
+* Choose highest score
+
+**Step 4: Calculate Accuracy**
+
+* Compare predicted vs correct answers
+* Print final accuracy
+
+
+**Example Questions**
+
+* Chemical symbol of gold → Au
+* Closest planet to Sun → Mercury
+* Derivative of x² → 2x
+
+
+**Run the Code**
+
+```python
+evaluator = SimpleBenchmarkEvaluator("tiiuae/falcon-rw-1b")
+evaluator.run(questions)
+```
+
+
+**Example Output**
+
+```
+[1]  Predicted: Au
+[2]  Predicted: Mercury
+[3]  Predicted: x^2
+
+Accuracy: 2/3 = 66.67%
+```
+
+
+**Notes**
+
+* This is a **simple evaluation**, not a full benchmark
+* Small models may make mistakes
+* Better models = higher accuracy
+
+
+**Key Idea**
+
+The model doesn’t "choose" answers directly.
+Instead, it **scores each option using loss** and picks the best one.
+
+
+**Use Cases**
+
+* Quick model testing
+* Comparing small LLMs
+* Learning how evaluation works
+
+
+**Future Improvements**
+
+* Add more questions
+* Use better prompting
+* Try larger models
+* Add batching for speed
+
+---
 
 
 
