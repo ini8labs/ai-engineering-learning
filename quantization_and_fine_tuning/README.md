@@ -374,3 +374,102 @@ You have a large model (e.g., Llama 70B, 140 GB in FP16)
 
 ---
 
+## Exercises
+
+---
+
+**1.  Quantize a Model with bitsandbytes.**
+
+---
+
+See implementation in `E:\ini8_labs\ai-engineering-learning\quantization_and_fine_tuning\bitsandbytes_quantize_model.ipynb`
+
+**8-Bit GPT2 Inference with Transformers**
+
+This project shows how to **run a GPT-2 model in 8-bit mode** using Hugging Face Transformers. 
+Running in 8-bit reduces memory usage, making it easier to run large models on GPUs with limited memory. 
+You can generate text quickly and efficiently!
+
+
+**Installation**
+
+We need a few libraries: `transformers`, `accelerate`, and `bitsandbytes`.  
+Run the command below:
+
+
+**Install required libraries**
+
+       !pip install -q transformers accelerate bitsandbytes
+
+
+
+**Load the Model in 8-bit**
+
+We will use `distilgpt2`, a smaller GPT-2 model, and load it in 8-bit to save GPU memory.
+
+
+**Load the model and tokenizer**
+
+`import torch`
+
+`from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig`
+
+model_name = `distilgpt2`
+
+**Load tokenizer**
+
+`tokenizer = AutoTokenizer.from_pretrained(model_name)`
+
+**Set 8-bit configuration**
+
+`bnb_config = BitsAndBytesConfig(load_in_8bit=True)`
+
+**Load model with 8-bit weights**
+
+`model = AutoModelForCausalLM.from_pretrained(
+    model_name,
+    quantization_config=bnb_config,
+    device_map="auto"  # Automatically use GPU if available
+)`
+
+
+
+**Run Text Generation**
+
+You can now generate text using the model. Here's an example:
+
+**Input text**
+
+`input_text = "Explain clearly in 3 sentences: AI is changing the world because"`
+
+`device = "cuda" if torch.cuda.is_available() else "cpu"`
+
+**Tokenize the input**
+
+`inputs = tokenizer(input_text, return_tensors="pt").to(device)`
+
+**Generate text without training**
+
+`with torch.no_grad():
+    outputs = model.generate(
+        **inputs,
+        max_new_tokens=50,
+        do_sample=True,
+        temperature=0.3,
+        top_k=50,
+        top_p=0.9,
+        repetition_penalty=1.2
+    )`
+
+**Decode and print the result**
+
+`print(tokenizer.decode(outputs[0], skip_special_tokens=True))`
+
+
+**Notes**
+
+- `load_in_8bit=True` reduces memory usage but slightly lowers precision.
+- `device_map="auto"` lets the model automatically use GPU if available.
+- You can adjust parameters like `temperature`, `top_k`, `top_p`, and `max_new_tokens` to control the output style.
+
+---
