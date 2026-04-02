@@ -473,3 +473,191 @@ You can now generate text using the model. Here's an example:
 - You can adjust parameters like `temperature`, `top_k`, `top_p`, and `max_new_tokens` to control the output style.
 
 ---
+
+**2. Efficient Inference with vLLM.**
+
+---
+
+See implementation in `E:\ini8_labs\ai-engineering-learning\quantization_and_fine_tuning\vllm_inference_week6.ipynb`
+
+
+**What we are doing**
+
+We are running a small AI model using **vLLM** to generate text efficiently on GPU.
+
+
+**Make sure GPU is ON**
+
+Go to:
+
+Runtime → Change runtime type → GPU
+
+
+
+**Step 1: Install vLLM**
+
+We remove old version (if any) and install fresh one.
+
+```python
+!pip uninstall -y vllm
+!pip install -q vllm
+```
+
+
+**Step 2: Check GPU**
+
+```python
+import torch
+print("GPU Available:", torch.cuda.is_available())
+```
+
+If it prints **True**, everything is fine.
+
+
+**Step 3: Load Model using vLLM**
+
+- We use a small model: `facebook/opt-125m`
+- `float16` → reduces memory usage
+
+```python
+from vllm import LLM, SamplingParams
+
+llm = LLM(
+    model="facebook/opt-125m",
+    dtype="float16"
+)
+```
+
+
+**Step 4: Set Generation Settings**
+
+- temperature → controls randomness
+- max_tokens → output length
+
+```python
+params = SamplingParams(
+    temperature=0.7,
+    max_tokens=50
+)
+```
+
+
+**Step 5: Generate Output**
+
+```python
+output = llm.generate(
+    "Explain Artificial Intelligence in 2 simple and correct sentences:",
+    params
+)
+
+print(output[0].outputs[0].text)
+```
+
+
+**Important Notes**
+- Code is **correct**
+- Model is **very small**, so answers may be bad 
+- For better results → use bigger models like:
+  - mistralai/Mistral-7B-Instruct-v0.1 (if GPU allows)
+
+
+**Simple Understanding**
+
+- vLLM = fast engine 
+- Model = brain 
+- Small brain → weak answers 
+
+---
+
+**3. This is a complete, end-to-end QLoRA fine-tuning project. We will fine-tune Llama 3.2 1B on a custom instruction dataset, covering dataset preparation, training configuration, the training loop, evaluation, and adapter merging.**
+
+---
+
+See implementation in `E:\ini8_labs\ai-engineering-learning\quantization_and_fine_tuning\qlora_finetune.ipynb`
+
+
+This notebook fine-tunes **TinyLlama 1.1B** on a tiny custom Q&A dataset using **LoRA** and **4-bit quantization**. It runs for free on Google Colab GPU.
+
+
+**What This Code Does**
+
+| Step | What Happens |
+|------|-------------|
+| 1 | Installs required libraries |
+| 2 | Creates a small Q&A dataset (2 examples) |
+| 3 | Loads TinyLlama in 4-bit (uses less GPU memory) |
+| 4 | Adds LoRA adapters (trains only a small part of the model) |
+| 5 | Tokenizes the dataset so the model can read it |
+| 6 | Trains the model for 1 epoch |
+| 7 | Tests the model with a sample question |
+
+
+
+**Libraries Used**
+
+| Library | Why It's Needed |
+|---------|----------------|
+| `transformers` | Loads and trains the model |
+| `peft` | Adds LoRA to the model |
+| `bitsandbytes` | Enables 4-bit loading (saves memory) |
+| `datasets` | Creates and handles the dataset |
+| `accelerate` | Helps run training smoothly |
+
+
+
+**The Dataset**
+
+Only 2 training examples are used (you can add more):
+
+```
+Q: What is AI?
+A: AI is machines acting smart.
+
+Q: What is Python?
+A: Python is a programming language.
+```
+
+To add more examples, just add more lines inside the `Dataset.from_list([...])` block in the same format.
+
+
+
+**Key Settings Explained**
+
+| Setting | Value | Meaning |
+|---------|-------|---------|
+| `load_in_4bit` | True | Load model using 4-bit precision (less RAM) |
+| `r` | 4 | LoRA rank — how much the model adapts |
+| `lora_alpha` | 8 | Scaling factor for LoRA |
+| `max_length` | 128 | Max tokens per training example |
+| `num_train_epochs` | 1 | Train through the dataset once |
+| `fp16` | True | Use half precision for faster training |
+
+
+
+**What is LoRA**
+
+**LoRA (Low-Rank Adaptation)** is a trick to fine-tune big models without updating all the weights. Instead of changing the whole model, it only trains a tiny set of extra parameters. This makes training:
+-  Much faster
+-  Use much less memory
+-  Easy to run on free GPUs
+
+
+
+**Expected Output**
+
+After training, the model will generate a completion for:
+
+```
+Q: What is AI?
+A:
+```
+
+Example output:
+```
+Q: What is AI?
+A: AI is machines acting smart.
+```
+
+---
+
+
